@@ -3,197 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather Check</title>
+  <title>Weather Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" />
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom, #1e3c72, #2a5298);
-      color: #fff;
-      animation: gradientShift 20s ease infinite;
-    }
-
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
+      background: #f4f4f4;
+      margin: 0;
       padding: 20px;
-      text-align: center;
+      color: #333;
     }
-
-    h1 {
-      font-weight: 300;
+    h2 {
+      text-align: center;
       margin-bottom: 10px;
     }
-
-    .weather-icon {
-      font-size: 64px;
-      margin: 10px 0;
+    #weather-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 100%;
     }
-
-    .temp {
-      font-size: 48px;
-      font-weight: 200;
-    }
-
-    .description {
-      font-size: 20px;
-      font-style: italic;
-    }
-
-    .details {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-
-    .daily-scroll {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      padding: 20px 0;
-    }
-
     .day-card {
-      background: rgba(255, 255, 255, 0.1);
+      background: white;
       border-radius: 8px;
       padding: 10px;
+      width: 120px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
     }
-
-    .day-card i {
-      font-size: 28px;
+    .day-card:hover {
+      transform: scale(1.05);
+    }
+    .wi {
+      font-size: 36px;
       margin: 5px 0;
+      animation-duration: 1.5s;
+      animation-iteration-count: infinite;
     }
+    .sunny { color: #f39c12; }
+    .rainy { color: #3498db; }
+    .cloudy { color: #95a5a6; }
+    .stormy { color: #9b59b6; }
+    .snowy { color: #7f8c8d; }
 
-    iframe {
-      border: none;
-      margin-top: 20px;
-      border-radius: 12px;
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
-
-    /* Icon color classes */
-    .sunny { color: #FFD700; }
-    .cloudy { color: #B0C4DE; }
-    .rainy { color: #00BFFF; }
-    .thunder { color: #FF4500; }
-    .snowy { color: #ADD8E6; }
-    .foggy { color: #A9A9A9; }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Weather Check</h1>
-    <div class="weather-icon"><i class="wi wi-day-sunny" id="main-icon"></i></div>
-    <div class="temp" id="temperature">Loading...</div>
-    <div class="description" id="description">Loading description...</div>
-    <div class="details">
-      <p>Humidity: <span id="humidity">--</span>%</p>
-      <p>Wind: <span id="wind">--</span> km/h</p>
-    </div>
-
-    <h2>5-Day Forecast</h2>
-    <div class="daily-scroll" id="daily-forecast">
-      <!-- Daily cards will be injected here -->
-    </div>
-
-    <iframe src="https://embed.windy.com/embed.html?lat=15.0&lon=120.9&zoom=7" width="100%" height="400"></iframe>
-  </div>
+  <h2>5-Day Weather Forecast</h2>
+  <div id="weather-container"></div>
 
   <script>
-    const apiKey = 'b628f02897fc7f24a3175118197ab994';
-    const lat = 15.0283;
-    const lon = 120.6938;
+    const container = document.getElementById('weather-container');
 
-    const iconMap = {
-      '01d': 'wi-day-sunny',
-      '01n': 'wi-night-clear',
-      '02d': 'wi-day-cloudy',
-      '02n': 'wi-night-alt-cloudy',
-      '03d': 'wi-cloud',
-      '03n': 'wi-cloud',
-      '04d': 'wi-cloudy',
-      '04n': 'wi-cloudy',
-      '09d': 'wi-showers',
-      '09n': 'wi-showers',
-      '10d': 'wi-day-rain',
-      '10n': 'wi-night-alt-rain',
-      '11d': 'wi-thunderstorm',
-      '11n': 'wi-thunderstorm',
-      '13d': 'wi-snow',
-      '13n': 'wi-snow',
-      '50d': 'wi-fog',
-      '50n': 'wi-fog'
-    };
+    function getDayName(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    }
 
-    function getColorClass(iconCode) {
-      if (['01d', '01n'].includes(iconCode)) return 'sunny';
-      if (['02d', '02n', '03d', '03n', '04d', '04n'].includes(iconCode)) return 'cloudy';
-      if (['09d', '09n', '10d', '10n'].includes(iconCode)) return 'rainy';
-      if (['11d', '11n'].includes(iconCode)) return 'thunder';
-      if (['13d', '13n'].includes(iconCode)) return 'snowy';
-      if (['50d', '50n'].includes(iconCode)) return 'foggy';
+    function getIconClass(description) {
+      description = description.toLowerCase();
+      if (description.includes('sun')) return 'wi-day-sunny';
+      if (description.includes('rain')) return 'wi-rain';
+      if (description.includes('cloud')) return 'wi-cloudy';
+      if (description.includes('storm')) return 'wi-thunderstorm';
+      if (description.includes('snow')) return 'wi-snow';
+      return 'wi-na';
+    }
+
+    function getColorClass(description) {
+      description = description.toLowerCase();
+      if (description.includes('sun')) return 'sunny';
+      if (description.includes('rain')) return 'rainy';
+      if (description.includes('cloud')) return 'cloudy';
+      if (description.includes('storm')) return 'stormy';
+      if (description.includes('snow')) return 'snowy';
       return '';
     }
 
-    async function fetchWeather() {
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
-      const data = await res.json();
-
-      document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°C`;
-      document.getElementById('description').textContent = data.weather[0].description;
-      document.getElementById('humidity').textContent = data.main.humidity;
-      document.getElementById('wind').textContent = data.wind.speed;
-
-      const iconCode = data.weather[0].icon;
-      const iconClass = iconMap[iconCode] || 'wi-na';
-      const colorClass = getColorClass(iconCode);
-      document.getElementById('main-icon').className = `wi ${iconClass} ${colorClass}`;
+    function getAnimClass(colorClass) {
+      switch (colorClass) {
+        case 'sunny': return 'bounce';
+        case 'rainy': return 'pulse';
+        case 'stormy': return 'spin';
+        default: return '';
+      }
     }
 
     async function fetchDailyForecast() {
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
-      const data = await res.json();
-      const container = document.getElementById('daily-forecast');
-      container.innerHTML = '';
+      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=15.0&longitude=120.9&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto');
+      const data = await response.json();
+      const days = data.daily.time;
+      const tempsMax = data.daily.temperature_2m_max;
+      const tempsMin = data.daily.temperature_2m_min;
+      const codes = data.daily.weathercode;
 
-      const days = {};
+      const descriptions = {
+        0: 'Clear sky',
+        1: 'Mainly clear',
+        2: 'Partly cloudy',
+        3: 'Overcast',
+        45: 'Fog',
+        48: 'Depositing rime fog',
+        51: 'Light drizzle',
+        61: 'Light rain',
+        63: 'Moderate rain',
+        65: 'Heavy rain',
+        71: 'Light snow',
+        80: 'Rain showers',
+        95: 'Thunderstorm',
+      };
 
-      data.list.forEach(entry => {
-        const date = new Date(entry.dt * 1000);
-        const day = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-
-        if (!days[day]) {
-          days[day] = {
-            temp: [],
-            icons: [],
-            descriptions: []
-          };
-        }
-
-        days[day].temp.push(entry.main.temp);
-        days[day].icons.push(entry.weather[0].icon);
-        days[day].descriptions.push(entry.weather[0].description);
-      });
-
-      Object.entries(days).slice(0, 5).forEach(([day, info]) => {
-        const avgTemp = Math.round(info.temp.reduce((a, b) => a + b) / info.temp.length);
-        const iconCode = info.icons[Math.floor(info.icons.length / 2)];
-        const description = info.descriptions[Math.floor(info.descriptions.length / 2)];
-        const iconClass = iconMap[iconCode] || 'wi-na';
-        const colorClass = getColorClass(iconCode);
-
+      days.slice(0, 5).forEach((day, i) => {
+        const avgTemp = Math.round((tempsMax[i] + tempsMin[i]) / 2);
+        const description = descriptions[codes[i]] || 'Unknown';
+        const iconClass = getIconClass(description);
+        const colorClass = getColorClass(description);
         const card = document.createElement('div');
         card.className = 'day-card';
         card.innerHTML = `
-          <h4>${day}</h4>
-          <i class="wi ${iconClass} ${colorClass}"></i>
+          <h4>${getDayName(day)}</h4>
+          <i class="wi ${iconClass} ${colorClass} ${getAnimClass(colorClass)}"></i>
           <p>${avgTemp}°C</p>
           <p>${description}</p>
         `;
@@ -201,7 +145,6 @@
       });
     }
 
-    fetchWeather();
     fetchDailyForecast();
   </script>
 </body>
