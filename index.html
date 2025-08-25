@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌤️ GREENYX Weather Check</title>
+  <title>GREENYX Weather Check</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" />
   <style>
     body {
@@ -21,7 +21,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
       padding: 20px;
       text-align: center;
@@ -52,24 +52,24 @@
       font-size: 18px;
     }
 
-    .hourly-scroll {
+    .daily-scroll {
       display: flex;
       overflow-x: auto;
       gap: 12px;
       padding: 20px 0;
     }
 
-    .hour-card {
-      min-width: 100px;
+    .day-card {
+      min-width: 160px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
-      padding: 10px;
+      padding: 12px;
       text-align: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    .hour-card i {
-      font-size: 32px;
+    .day-card i {
+      font-size: 36px;
       margin: 5px 0;
     }
 
@@ -91,8 +91,9 @@
       <p>Wind: <span id="wind">--</span> km/h</p>
     </div>
 
-    <div class="hourly-scroll" id="hourly-forecast">
-      <!-- Hourly cards will be injected here -->
+    <h2>5-Day Forecast</h2>
+    <div class="daily-scroll" id="daily-forecast">
+      <!-- Daily cards will be injected here -->
     </div>
 
     <iframe src="https://embed.windy.com/embed.html?lat=15.0&lon=120.9&zoom=7" width="100%" height="400"></iframe>
@@ -102,6 +103,33 @@
     const apiKey = 'b628f02897fc7f24a3175118197ab994';
     const lat = 15.0283;
     const lon = 120.6938;
+
+    const iconMap = {
+      '01d': 'wi-day-sunny',
+      '01n': 'wi-night-clear',
+      '02d': 'wi-day-cloudy',
+      '02n': 'wi-night-alt-cloudy',
+      '03d': 'wi-cloud',
+      '03n': 'wi-cloud',
+      '04d': 'wi-cloudy',
+      '04n': 'wi-cloudy',
+      '09d': 'wi-showers',
+      '09n': 'wi-showers',
+      '10d': 'wi-day-rain',
+      '10n': 'wi-night-alt-rain',
+      '11d': 'wi-thunderstorm',
+      '11n': 'wi-thunderstorm',
+      '13d': 'wi-snow',
+      '13n': 'wi-snow',
+      '50d': 'wi-fog',
+      '50n': 'wi-fog'
+    };
+
+    function formatTime(hour) {
+      const h = hour % 12 || 12;
+      const suffix = hour >= 12 ? 'PM' : 'AM';
+      return `${h} ${suffix}`;
+    }
 
     async function fetchWeather() {
       const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
@@ -113,77 +141,54 @@
       document.getElementById('wind').textContent = data.wind.speed;
 
       const iconCode = data.weather[0].icon;
-      const iconMap = {
-        '01d': 'wi-day-sunny',
-        '01n': 'wi-night-clear',
-        '02d': 'wi-day-cloudy',
-        '02n': 'wi-night-alt-cloudy',
-        '03d': 'wi-cloud',
-        '03n': 'wi-cloud',
-        '04d': 'wi-cloudy',
-        '04n': 'wi-cloudy',
-        '09d': 'wi-showers',
-        '09n': 'wi-showers',
-        '10d': 'wi-day-rain',
-        '10n': 'wi-night-alt-rain',
-        '11d': 'wi-thunderstorm',
-        '11n': 'wi-thunderstorm',
-        '13d': 'wi-snow',
-        '13n': 'wi-snow',
-        '50d': 'wi-fog',
-        '50n': 'wi-fog'
-      };
       document.getElementById('main-icon').className = `wi ${iconMap[iconCode] || 'wi-na'}`;
     }
 
-    async function fetchHourly() {
+    async function fetchDailyForecast() {
       const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
       const data = await res.json();
-      const container = document.getElementById('hourly-forecast');
+      const container = document.getElementById('daily-forecast');
       container.innerHTML = '';
 
-      for (let i = 0; i < 6; i++) {
-        const hour = data.list[i];
-        const time = new Date(hour.dt * 1000).getHours();
-        const iconCode = hour.weather[0].icon;
-        const temp = Math.round(hour.main.temp);
-        const rain = hour.pop * 100;
+      const days = {};
 
-        const iconClass = {
-          '01d': 'wi-day-sunny',
-          '01n': 'wi-night-clear',
-          '02d': 'wi-day-cloudy',
-          '02n': 'wi-night-alt-cloudy',
-          '03d': 'wi-cloud',
-          '03n': 'wi-cloud',
-          '04d': 'wi-cloudy',
-          '04n': 'wi-cloudy',
-          '09d': 'wi-showers',
-          '09n': 'wi-showers',
-          '10d': 'wi-day-rain',
-          '10n': 'wi-night-alt-rain',
-          '11d': 'wi-thunderstorm',
-          '11n': 'wi-thunderstorm',
-          '13d': 'wi-snow',
-          '13n': 'wi-snow',
-          '50d': 'wi-fog',
-          '50n': 'wi-fog'
-        }[iconCode] || 'wi-na';
+      data.list.forEach(entry => {
+        const date = new Date(entry.dt * 1000);
+        const day = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+        if (!days[day]) {
+          days[day] = {
+            temp: [],
+            icons: [],
+            descriptions: []
+          };
+        }
+
+        days[day].temp.push(entry.main.temp);
+        days[day].icons.push(entry.weather[0].icon);
+        days[day].descriptions.push(entry.weather[0].description);
+      });
+
+      Object.entries(days).slice(0, 5).forEach(([day, info]) => {
+        const avgTemp = Math.round(info.temp.reduce((a, b) => a + b) / info.temp.length);
+        const iconCode = info.icons[Math.floor(info.icons.length / 2)];
+        const description = info.descriptions[Math.floor(info.descriptions.length / 2)];
+        const iconClass = iconMap[iconCode] || 'wi-na';
 
         const card = document.createElement('div');
-        card.className = 'hour-card';
+        card.className = 'day-card';
         card.innerHTML = `
-          <p>${time}:00</p>
+          <h4>${day}</h4>
           <i class="wi ${iconClass}"></i>
-          <p>${temp}°C</p>
-          <p>${Math.round(rain)}%</p>
+          <p>${avgTemp}°C</p>
+          <p>${description}</p>
         `;
         container.appendChild(card);
-      }
+      });
     }
 
     fetchWeather();
-    fetchHourly();
+    fetchDailyForecast();
   </script>
 </body>
 </html>
