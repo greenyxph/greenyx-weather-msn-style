@@ -9,32 +9,15 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298);
       color: #fff;
-      transition: background 1s ease;
+      animation: gradientShift 20s ease infinite;
     }
 
-    .sunny-bg {
-      background: linear-gradient(to bottom, #fbc02d, #f57f17);
-    }
-
-    .cloudy-bg {
-      background: linear-gradient(to bottom, #90a4ae, #607d8b);
-    }
-
-    .rainy-bg {
-      background: linear-gradient(to bottom, #4fc3f7, #0288d1);
-    }
-
-    .thunder-bg {
-      background: linear-gradient(to bottom, #ff7043, #bf360c);
-    }
-
-    .snowy-bg {
-      background: linear-gradient(to bottom, #e0f7fa, #b2ebf2);
-    }
-
-    .foggy-bg {
-      background: linear-gradient(to bottom, #cfd8dc, #b0bec5);
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     .container {
@@ -69,25 +52,24 @@
       font-size: 18px;
     }
 
-    .daily-grid {
+    .daily-scroll {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      overflow-x: auto;
       gap: 12px;
       padding: 20px 0;
     }
 
     .day-card {
-      width: 140px;
+      min-width: 160px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
-      padding: 10px;
+      padding: 12px;
       text-align: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
     .day-card i {
-      font-size: 28px;
+      font-size: 36px;
       margin: 5px 0;
     }
 
@@ -96,14 +78,6 @@
       margin-top: 20px;
       border-radius: 12px;
     }
-
-    /* Icon colors */
-    .sunny { color: #FFD700; }
-    .cloudy { color: #B0C4DE; }
-    .rainy { color: #00BFFF; }
-    .thunder { color: #FF4500; }
-    .snowy { color: #ADD8E6; }
-    .foggy { color: #A9A9A9; }
   </style>
 </head>
 <body>
@@ -118,7 +92,7 @@
     </div>
 
     <h2>5-Day Forecast</h2>
-    <div class="daily-grid" id="daily-forecast">
+    <div class="daily-scroll" id="daily-forecast">
       <!-- Daily cards will be injected here -->
     </div>
 
@@ -151,18 +125,10 @@
       '50n': 'wi-fog'
     };
 
-    function getColorClass(iconCode) {
-      if (['01d', '01n'].includes(iconCode)) return 'sunny';
-      if (['02d', '02n', '03d', '03n', '04d', '04n'].includes(iconCode)) return 'cloudy';
-      if (['09d', '09n', '10d', '10n'].includes(iconCode)) return 'rainy';
-      if (['11d', '11n'].includes(iconCode)) return 'thunder';
-      if (['13d', '13n'].includes(iconCode)) return 'snowy';
-      if (['50d', '50n'].includes(iconCode)) return 'foggy';
-      return '';
-    }
-
-    function getBackgroundClass(iconCode) {
-      return getColorClass(iconCode) + '-bg';
+    function formatTime(hour) {
+      const h = hour % 12 || 12;
+      const suffix = hour >= 12 ? 'PM' : 'AM';
+      return `${h} ${suffix}`;
     }
 
     async function fetchWeather() {
@@ -175,12 +141,7 @@
       document.getElementById('wind').textContent = data.wind.speed;
 
       const iconCode = data.weather[0].icon;
-      const iconClass = iconMap[iconCode] || 'wi-na';
-      const colorClass = getColorClass(iconCode);
-      const bgClass = getBackgroundClass(iconCode);
-
-      document.getElementById('main-icon').className = `wi ${iconClass} ${colorClass}`;
-      document.body.className = bgClass;
+      document.getElementById('main-icon').className = `wi ${iconMap[iconCode] || 'wi-na'}`;
     }
 
     async function fetchDailyForecast() {
@@ -213,13 +174,12 @@
         const iconCode = info.icons[Math.floor(info.icons.length / 2)];
         const description = info.descriptions[Math.floor(info.descriptions.length / 2)];
         const iconClass = iconMap[iconCode] || 'wi-na';
-        const colorClass = getColorClass(iconCode);
 
         const card = document.createElement('div');
         card.className = 'day-card';
         card.innerHTML = `
           <h4>${day}</h4>
-          <i class="wi ${iconClass} ${colorClass}"></i>
+          <i class="wi ${iconClass}"></i>
           <p>${avgTemp}°C</p>
           <p>${description}</p>
         `;
@@ -228,4 +188,7 @@
     }
 
     fetchWeather();
-    fetch
+    fetchDailyForecast();
+  </script>
+</body>
+</html>
