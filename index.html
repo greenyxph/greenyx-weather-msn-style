@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GREENYX Weather Check</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #c2e9fb, #a1c4fd);
+      color: #333;
+    }
+    header {
+      background-color: #ffffffcc;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 16px;
+      text-align: center;
+    }
+    .card h3 {
+      margin-top: 0;
+    }
+    .icon {
+      font-size: 48px;
+      margin: 10px 0;
+    }
+    .alert {
+      background: #ffefc5;
+      border-left: 6px solid #f8b500;
+      padding: 12px;
+      margin: 20px;
+      font-weight: bold;
+    }
+    footer {
+      text-align: center;
+      padding: 12px;
+      font-size: 0.9em;
+      background: #ffffffcc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌤️ GREENYX Weather Check</h1>
+    <p>Live forecast for Central Luzon farmers</p>
+  </header>
+
+  <div class="alert" id="weather-alert">
+    ⏳ Loading advisory...
+  </div>
+
+  <section class="container">
+    <div class="card">
+      <h3>Today</h3>
+      <div class="icon" id="weather-icon">🌦️</div>
+      <p id="temperature">Loading temperature...</p>
+      <p id="description">Loading description...</p>
+      <p id="humidity">Humidity: --%</p>
+      <p id="wind">Wind: -- km/h</p>
+    </div>
+  </section>
+
+  <footer>
+    Powered by GREENYX • Data from OpenWeather • Updated <span id="update-time">--</span>
+  </footer>
+
+  <script>
+    const apiKey = 'b628f02897fc7f24a3175118197ab994';
+    const city = 'San Rafael';
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const temp = data.main.temp;
+        const desc = data.weather[0].description;
+        const iconCode = data.weather[0].icon;
+        const humidity = data.main.humidity;
+        const wind = data.wind.speed;
+        const updateTime = new Date().toLocaleString();
+
+        document.getElementById('temperature').textContent = `Temperature: ${temp}°C`;
+        document.getElementById('description').textContent = desc.charAt(0).toUpperCase() + desc.slice(1);
+        document.getElementById('humidity').textContent = `Humidity: ${humidity}%`;
+        document.getElementById('wind').textContent = `Wind: ${wind} km/h`;
+        document.getElementById('update-time').textContent = updateTime;
+
+        const iconMap = {
+          '01d': '☀️', '01n': '🌙',
+          '02d': '⛅', '02n': '☁️',
+          '03d': '☁️', '03n': '☁️',
+          '09d': '🌧️', '09n': '🌧️',
+          '10d': '🌦️', '10n': '🌧️',
+          '11d': '⛈️', '11n': '🌩️',
+          '13d': '❄️', '13n': '❄️',
+          '50d': '🌫️', '50n': '🌫️'
+        };
+        document.getElementById('weather-icon').textContent = iconMap[iconCode] || '🌡️';
+
+        let advisory = '';
+        if (desc.includes('rain') || desc.includes('storm')) {
+          advisory = '⚠️ Rain expected. Delay transplanting and secure drying areas.';
+        } else if (temp > 34) {
+          advisory = '🔥 High heat alert. Consider shade netting and irrigation.';
+        } else {
+          advisory = '✅ Weather is favorable for field activities.';
+        }
+        document.getElementById('weather-alert').textContent = advisory;
+      })
+      .catch(error => {
+        console.error('Weather fetch error:', error);
+        document.getElementById('weather-alert').textContent = '⚠️ Unable to load weather data.';
+      });
+  </script>
+</body>
+</html>
