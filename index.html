@@ -3,90 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GREENYX Weather Check</title>
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet">
+  <title>Greenyx Weather — MSN Style</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" />
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #c2e9fb, #a1c4fd);
-      color: #333;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298);
+      color: #fff;
+      animation: gradientShift 20s ease infinite;
     }
-    header {
-      background-color: #ffffffcc;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
+
     .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+      max-width: 800px;
+      margin: auto;
       padding: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 16px;
       text-align: center;
     }
-    .card h3 {
-      margin-top: 0;
+
+    h1 {
+      font-weight: 300;
+      margin-bottom: 10px;
     }
-    .icon {
-      font-size: 48px;
+
+    .weather-icon {
+      font-size: 64px;
       margin: 10px 0;
     }
-    .alert {
-      background: #ffefc5;
-      border-left: 6px solid #f8b500;
-      padding: 12px;
-      margin: 20px;
-      font-weight: bold;
+
+    .temp {
+      font-size: 48px;
+      font-weight: 200;
     }
-    footer {
+
+    .description {
+      font-size: 20px;
+      font-style: italic;
+    }
+
+    .hourly-scroll {
+      display: flex;
+      overflow-x: auto;
+      gap: 12px;
+      padding: 20px 0;
+    }
+
+    .hour-card {
+      min-width: 100px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px;
       text-align: center;
-      padding: 12px;
-      font-size: 0.9em;
-      background: #ffffffcc;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .hour-card i {
+      font-size: 32px;
+      margin: 5px 0;
+    }
+
+    iframe {
+      border: none;
+      margin-top: 20px;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🌤️ GREENYX Weather Check</h1>
-    <p>Live forecast based on your current location</p>
-  </header>
+  <div class="container">
+    <h1>San Rafael Weather</h1>
+    <div class="weather-icon"><i class="wi wi-day-sunny"></i></div>
+    <div class="temp">30°C</div>
+    <div class="description">Clear skies</div>
 
-  <div class="alert" id="weather-alert">
-    ⏳ Loading advisory...
+    <div class="hourly-scroll">
+      <div class="hour-card">
+        <p>1 PM</p>
+        <i class="wi wi-day-cloudy"></i>
+        <p>29°C</p>
+        <p>58%</p>
+      </div>
+      <div class="hour-card">
+        <p>2 PM</p>
+        <i class="wi wi-day-rain"></i>
+        <p>28°C</p>
+        <p>65%</p>
+      </div>
+      <div class="hour-card">
+        <p>3 PM</p>
+        <i class="wi wi-day-thunderstorm"></i>
+        <p>27°C</p>
+        <p>72%</p>
+      </div>
+      <!-- Add more cards dynamically -->
+    </div>
+
+    <iframe src="https://embed.windy.com/embed.html?lat=15.0&lon=120.9&zoom=7" width="100%" height="400"></iframe>
   </div>
 
-  <section class="container">
-    <div class="card">
-      <h3>Today</h3>
-      <div class="icon" id="weather-icon">🌦️</div>
-      <p id="temperature">Loading temperature...</p>
-      <p id="description">Loading description...</p>
-      <p id="humidity">Humidity: --%</p>
-      <p id="wind">Wind: -- km/h</p>
-    </div>
-  </section>
-
-  <footer>
-    Powered by GREENYX • Data from OpenWeather • Updated <span id="update-time">--</span>
-  </footer>
-
   <script>
-    const apiKey = 'b628f02897fc7f24a3175118197ab994';
-
-    function fetchWeatherByCoords(lat, lon) {
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
-
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          const temp = data.main.temp;
-          const desc = data.weather[0].description;
-          const iconCode = data.weather[0].icon
+    // Example: Replace static content with OpenWeather API data
+    // You can map OpenWeather icon codes to Weather Icons classes here
+  </script>
+</body>
+</html>
