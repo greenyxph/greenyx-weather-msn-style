@@ -85,37 +85,6 @@
     .thunder { color: #FF4500; }
     .snowy { color: #ADD8E6; }
     .foggy { color: #A9A9A9; }
-
-    /* Animation keyframes */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      75% { transform: translateX(4px); }
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
-    /* Weather-based animation classes */
-    .sunny-anim { animation: spin 6s linear infinite; }
-    .cloudy-anim { animation: bounce 3s ease-in-out infinite; }
-    .rainy-anim { animation: pulse 2s ease-in-out infinite; }
-    .thunder-anim { animation: shake 1s ease-in-out infinite; }
-    .snowy-anim { animation: bounce 4s ease-in-out infinite; }
-    .foggy-anim { animation: pulse 3s ease-in-out infinite; }
   </style>
 </head>
 <body>
@@ -173,10 +142,6 @@
       return '';
     }
 
-    function getAnimClass(colorClass) {
-      return colorClass ? `${colorClass}-anim` : '';
-    }
-
     async function fetchWeather() {
       const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
       const data = await res.json();
@@ -189,8 +154,7 @@
       const iconCode = data.weather[0].icon;
       const iconClass = iconMap[iconCode] || 'wi-na';
       const colorClass = getColorClass(iconCode);
-      const animClass = getAnimClass(colorClass);
-      document.getElementById('main-icon').className = `wi ${iconClass} ${colorClass} ${animClass}`;
+      document.getElementById('main-icon').className = `wi ${iconClass} ${colorClass}`;
     }
 
     async function fetchDailyForecast() {
@@ -221,12 +185,15 @@
       Object.entries(days).slice(0, 5).forEach(([day, info]) => {
         const avgTemp = Math.round(info.temp.reduce((a, b) => a + b) / info.temp.length);
         const iconCode = info.icons[Math.floor(info.icons.length / 2)];
-        const description = info.descriptions[Math.floor(info.descriptions
+        const description = info.descriptions[Math.floor(info.descriptions.length / 2)];
+        const iconClass = iconMap[iconCode] || 'wi-na';
+        const colorClass = getColorClass(iconCode);
+
         const card = document.createElement('div');
         card.className = 'day-card';
         card.innerHTML = `
           <h4>${day}</h4>
-          <i class="wi ${iconClass} ${colorClass} ${getAnimClass(colorClass)}"></i>
+          <i class="wi ${iconClass} ${colorClass}"></i>
           <p>${avgTemp}°C</p>
           <p>${description}</p>
         `;
