@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Greenyx Weather — MSN Style</title>
+  <title>🌤️ GREENYX Weather Check</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css" />
   <style>
     body {
@@ -47,6 +47,11 @@
       font-style: italic;
     }
 
+    .details {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
     .hourly-scroll {
       display: flex;
       overflow-x: auto;
@@ -77,39 +82,108 @@
 </head>
 <body>
   <div class="container">
-    <h1>San Rafael Weather</h1>
-    <div class="weather-icon"><i class="wi wi-day-sunny"></i></div>
-    <div class="temp">30°C</div>
-    <div class="description">Clear skies</div>
+    <h1>🌤️ GREENYX Weather Check</h1>
+    <div class="weather-icon"><i class="wi wi-day-sunny" id="main-icon"></i></div>
+    <div class="temp" id="temperature">Loading...</div>
+    <div class="description" id="description">Loading description...</div>
+    <div class="details">
+      <p>Humidity: <span id="humidity">--</span>%</p>
+      <p>Wind: <span id="wind">--</span> km/h</p>
+    </div>
 
-    <div class="hourly-scroll">
-      <div class="hour-card">
-        <p>1 PM</p>
-        <i class="wi wi-day-cloudy"></i>
-        <p>29°C</p>
-        <p>58%</p>
-      </div>
-      <div class="hour-card">
-        <p>2 PM</p>
-        <i class="wi wi-day-rain"></i>
-        <p>28°C</p>
-        <p>65%</p>
-      </div>
-      <div class="hour-card">
-        <p>3 PM</p>
-        <i class="wi wi-day-thunderstorm"></i>
-        <p>27°C</p>
-        <p>72%</p>
-      </div>
-      <!-- Add more cards dynamically -->
+    <div class="hourly-scroll" id="hourly-forecast">
+      <!-- Hourly cards will be injected here -->
     </div>
 
     <iframe src="https://embed.windy.com/embed.html?lat=15.0&lon=120.9&zoom=7" width="100%" height="400"></iframe>
   </div>
 
   <script>
-    // Example: Replace static content with OpenWeather API data
-    // You can map OpenWeather icon codes to Weather Icons classes here
+    const apiKey = 'b628f02897fc7f24a3175118197ab994';
+    const lat = 15.0283;
+    const lon = 120.6938;
+
+    async function fetchWeather() {
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
+      const data = await res.json();
+
+      document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°C`;
+      document.getElementById('description').textContent = data.weather[0].description;
+      document.getElementById('humidity').textContent = data.main.humidity;
+      document.getElementById('wind').textContent = data.wind.speed;
+
+      const iconCode = data.weather[0].icon;
+      const iconMap = {
+        '01d': 'wi-day-sunny',
+        '01n': 'wi-night-clear',
+        '02d': 'wi-day-cloudy',
+        '02n': 'wi-night-alt-cloudy',
+        '03d': 'wi-cloud',
+        '03n': 'wi-cloud',
+        '04d': 'wi-cloudy',
+        '04n': 'wi-cloudy',
+        '09d': 'wi-showers',
+        '09n': 'wi-showers',
+        '10d': 'wi-day-rain',
+        '10n': 'wi-night-alt-rain',
+        '11d': 'wi-thunderstorm',
+        '11n': 'wi-thunderstorm',
+        '13d': 'wi-snow',
+        '13n': 'wi-snow',
+        '50d': 'wi-fog',
+        '50n': 'wi-fog'
+      };
+      document.getElementById('main-icon').className = `wi ${iconMap[iconCode] || 'wi-na'}`;
+    }
+
+    async function fetchHourly() {
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
+      const data = await res.json();
+      const container = document.getElementById('hourly-forecast');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 6; i++) {
+        const hour = data.list[i];
+        const time = new Date(hour.dt * 1000).getHours();
+        const iconCode = hour.weather[0].icon;
+        const temp = Math.round(hour.main.temp);
+        const rain = hour.pop * 100;
+
+        const iconClass = {
+          '01d': 'wi-day-sunny',
+          '01n': 'wi-night-clear',
+          '02d': 'wi-day-cloudy',
+          '02n': 'wi-night-alt-cloudy',
+          '03d': 'wi-cloud',
+          '03n': 'wi-cloud',
+          '04d': 'wi-cloudy',
+          '04n': 'wi-cloudy',
+          '09d': 'wi-showers',
+          '09n': 'wi-showers',
+          '10d': 'wi-day-rain',
+          '10n': 'wi-night-alt-rain',
+          '11d': 'wi-thunderstorm',
+          '11n': 'wi-thunderstorm',
+          '13d': 'wi-snow',
+          '13n': 'wi-snow',
+          '50d': 'wi-fog',
+          '50n': 'wi-fog'
+        }[iconCode] || 'wi-na';
+
+        const card = document.createElement('div');
+        card.className = 'hour-card';
+        card.innerHTML = `
+          <p>${time}:00</p>
+          <i class="wi ${iconClass}"></i>
+          <p>${temp}°C</p>
+          <p>${Math.round(rain)}%</p>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    fetchWeather();
+    fetchHourly();
   </script>
 </body>
 </html>
