@@ -53,23 +53,22 @@
     }
 
     .daily-scroll {
-      display: flex;
-      overflow-x: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 12px;
       padding: 20px 0;
     }
 
     .day-card {
-      min-width: 160px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
     .day-card i {
-      font-size: 36px;
+      font-size: 28px;
       margin: 5px 0;
     }
 
@@ -78,6 +77,14 @@
       margin-top: 20px;
       border-radius: 12px;
     }
+
+    /* Icon color classes */
+    .sunny { color: #FFD700; }
+    .cloudy { color: #B0C4DE; }
+    .rainy { color: #00BFFF; }
+    .thunder { color: #FF4500; }
+    .snowy { color: #ADD8E6; }
+    .foggy { color: #A9A9A9; }
   </style>
 </head>
 <body>
@@ -125,10 +132,14 @@
       '50n': 'wi-fog'
     };
 
-    function formatTime(hour) {
-      const h = hour % 12 || 12;
-      const suffix = hour >= 12 ? 'PM' : 'AM';
-      return `${h} ${suffix}`;
+    function getColorClass(iconCode) {
+      if (['01d', '01n'].includes(iconCode)) return 'sunny';
+      if (['02d', '02n', '03d', '03n', '04d', '04n'].includes(iconCode)) return 'cloudy';
+      if (['09d', '09n', '10d', '10n'].includes(iconCode)) return 'rainy';
+      if (['11d', '11n'].includes(iconCode)) return 'thunder';
+      if (['13d', '13n'].includes(iconCode)) return 'snowy';
+      if (['50d', '50n'].includes(iconCode)) return 'foggy';
+      return '';
     }
 
     async function fetchWeather() {
@@ -141,7 +152,9 @@
       document.getElementById('wind').textContent = data.wind.speed;
 
       const iconCode = data.weather[0].icon;
-      document.getElementById('main-icon').className = `wi ${iconMap[iconCode] || 'wi-na'}`;
+      const iconClass = iconMap[iconCode] || 'wi-na';
+      const colorClass = getColorClass(iconCode);
+      document.getElementById('main-icon').className = `wi ${iconClass} ${colorClass}`;
     }
 
     async function fetchDailyForecast() {
@@ -174,12 +187,13 @@
         const iconCode = info.icons[Math.floor(info.icons.length / 2)];
         const description = info.descriptions[Math.floor(info.descriptions.length / 2)];
         const iconClass = iconMap[iconCode] || 'wi-na';
+        const colorClass = getColorClass(iconCode);
 
         const card = document.createElement('div');
         card.className = 'day-card';
         card.innerHTML = `
           <h4>${day}</h4>
-          <i class="wi ${iconClass}"></i>
+          <i class="wi ${iconClass} ${colorClass}"></i>
           <p>${avgTemp}°C</p>
           <p>${description}</p>
         `;
